@@ -11,7 +11,7 @@ function ajax_init() {
         // Get the URL of the requested resource
         let url = el.getAttribute("ajax-get")
     
-        // Get and parse any options proveded by the ajax-options attribute
+        // Get and parse any options provided by the ajax-options attribute
         let options = el.getAttribute("ajax-options")
         if(options) {
             options = parse_options(options)
@@ -40,8 +40,6 @@ function ajax_init() {
         ajax_get(url, el, parser, options)
     })
 
-
-
     // Get elements that trigger ajax events
     document.querySelectorAll("*[ajax-update]").forEach(el => {
 
@@ -51,10 +49,37 @@ function ajax_init() {
 
         // Get the event that causes the trigger, default to click
         let event_name = el.getAttribute("ajax-trigger")
-        if(!event_name) event_name = "click"
+        if(!event_name) {
+            // Default is 'click' unless element is a <form>
+            // In which case, teh default trigger is teh submit event
+            event_name = el.tagName !== "FORM" ? "click" : "submit"
+        }
 
-        console.log(el, trigger_name, event_name)
         el.addEventListener(event_name, () => ajax_event(trigger_name))
+
+    })
+
+    // Get elements that trigger ajax events
+    document.querySelectorAll("*[ajax-post]").forEach(el => {
+
+        // Get the endpoint that the data will be submitted to
+        const url = el.getAttribute("ajax-post")
+
+        if(el.tagName !== "FORM") {
+            console.warn("ajax-post must be defined on a <form> tag")
+            return
+        }
+
+        // Get the input elements that need to be submitted
+        const inputs = el.querySelectorAll("*[ajax-data]")
+
+        let options = el.getAttribute("ajax-options")
+        if(options) {
+            options = parse_options(options)
+        }
+            
+        // Handle the submission
+        el.addEventListener("submit", e => ajax_submit(e, url, el, inputs, options))
 
     })
 
@@ -90,6 +115,21 @@ function ajax_init() {
         element.innerHTML = response
     }
     
+
+    async function ajax_post(url, body) {
+        try {
+            let response = await fetch(url, {
+                method: "POST",
+                body: body
+            })
+
+            // Read the response message from the server
+            return await response.text()
+        } catch (error) {
+            report_error("Could not submit form", error)
+            return "Error Submitting"
+        }
+    }
     
     
     function parse_options(options_string) {
@@ -118,8 +158,9 @@ function ajax_init() {
                 // Assign the value to this key on the options object
                 options[k] = v
             }
-    
-            return options
+            
+            // Ensure options is an object
+            return options !== '' ? options : {}
     
         } catch (error) {
             report_error("Malformed options string", error)
@@ -151,6 +192,31 @@ function ajax_init() {
     
     function report_error(message, error) {
         if(error) console.error(error)
-        console.error(`${error ? 'INFO ABOUT THE ABOVE ERROR \n' : ''}ajax-get error: ${message}`)
+        console.error(`${error ? 'INFO ABOUT THE ABOVE ERROR \n' : ''} ajax-get error: ${message}`)
+    }
+
+
+    async function ajax_submit(event, url, form_element, input_elements, options) {
+        // Disable the default form submission behavior
+        event.preventDefault()
+
+        let form_data = new FormData()
+
+        // Extract the data from the form
+        for (const input of input_elements) {
+            form_data.append(input.getAttribute("ajax-data"), input.value)
+        }
+
+        // Post the data to the server
+        let response = await ajax_post(url, form_data)
+
+
+        // Check if the user does not want the form contents to be overwritten
+        if(options && ("overwrite" in options === false || options["overwrite"] == true)) {
+            // Default: Write the response over the form
+            form_element.innerHTML = response
+        }
+
+
     }
 }

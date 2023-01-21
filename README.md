@@ -6,21 +6,38 @@ This can be used to fill the page with data as soon as the page loads or a reque
 
 ## Documentation
 
+### For Getting Data
+
+<br>
+
 
 |  Attribute Name  |  Purpose  |
 |------------------|-----------|
 | ajax-get         | Used to tell the library where to fetch the data from |
 | ajax-parser      | Used to specify a function that the data should be passed to |
 | ajax-listener    | Specifies the name of the html-ajax event that will make this element repeat its request |
-| ajax-update      | Specifies the name of the html-ajax event to dispatch when the triggered (default trigger event is the click event) |
+| ajax-update      | Specifies the name of the html-ajax event to dispatch when the triggered (default trigger event is the click event unless the element is a form: in which case the default event is teh submit event) |
 | ajax-trigger     | Used to specify the event that should trigger the ajax event |
 | ajax-defer        | Tells the library not to fetch the data on page load |
-| ajax-options      | Used to pass any other options about this ajax request eg. parse as JSON |
+| ajax-options      | Used to pass any other options about this ajax request eg. Parse as JSON (json: true) |
 
+### For Posting Data
+
+<br>
+
+|  Attribute Name  |  Purpose  |
+|------------------|-----------|
+| ajax-post        | Specifies the endpoint to post the data too |
+| ajax-data        | Specifies the key of this data in the post request. The data value is the value attribute of the element where ajax-data is stated |
+| ajax-options      | Used to pass any other options about this ajax request eg. Don't overwrite form with the server's response (overwrite: false) |
 
 <br>
 
 ## Examples
+
+### GET Requests
+
+<hr>
 
 <br>
 
@@ -86,8 +103,34 @@ function parser_function(response_data) {
 
 <button
     ajax-update = "listenerName"
+    ajax-trigger = "mouseover"
 >
 Refresh
 </button>
 ```
-*When the button is clicked, every element with ajax-listener set to the same string as ajax-update will repeat its AJAX request, refreshing its content.*
+*When the cursor hovers over the button, every element with ajax-listener set to the same string as ajax-update will repeat its AJAX request, refreshing its content.*
+
+<br>
+
+### POST Requests
+
+<hr>
+
+<br>
+
+
+**Handling a form submission**
+```html
+<form ajax-post = "/your-endpoint">
+    <input placeholder = "Full Name" ajax-data = "fullName">
+    <input type = "submit">
+</form>
+```
+*When the form submit event is fired, the data in the form will be encapsulated automatically in a form data object and then posted to the endpoint. By default, the response from the server will overwrite innerHTML of the form.*
+
+*The form data in this case will take the form:*
+```js
+{
+    fullName: "The value entered"
+}
+```
