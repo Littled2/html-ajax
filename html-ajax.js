@@ -51,8 +51,9 @@ function ajax_init() {
         let event_name = el.getAttribute("ajax-trigger")
         if(!event_name) {
             // Default is 'click' unless element is a <form>
-            // In which case, teh default trigger is teh submit event
-            event_name = el.tagName !== "FORM" ? "click" : "submit"
+            // In which case, teh default trigger is 'ajax-post-complete' event
+            // This will run after the POST request completes
+            event_name = el.tagName !== "FORM" ? "click" : "ajax-post-complete"
         }
 
         el.addEventListener(event_name, () => ajax_event(trigger_name))
@@ -92,7 +93,7 @@ function ajax_init() {
 
         for (let i = 0; i < window.ajax.listeners[name].length; i++) {
             const [ url, el, parser, options ] = window.ajax.listeners[name][i]
-            // Gets the paramaters for this listening element
+            // Gets the parameters for this listening element
             ajax_get(url, el, parser, options)
         }
     }
@@ -211,11 +212,21 @@ function ajax_init() {
         let response = await ajax_post(url, form_data)
 
 
+        // Dispatch the 'ajax-post-complete' event when the POST request is complete
+        const submit_complete_event = new Event("ajax-post-complete")
+        form_element.dispatchEvent(submit_complete_event)
+
+        let shouldOverwrite = true
+
         // Check if the user does not want the form contents to be overwritten
-        if(options && ("overwrite" in options === false || options["overwrite"] == true)) {
-            // Default: Write the response over the form
-            form_element.innerHTML = response
+        if(options && ("overwrite" in options)) {
+            shouldOverwrite = options["overwrite"]
         }
+
+        if(!shouldOverwrite) return
+        
+        // Default: Write the response over the form
+        form_element.innerHTML = response
 
 
     }
