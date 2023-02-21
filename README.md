@@ -1,8 +1,9 @@
 ﻿# AJAX in HTML
 
-A tiny library used to let your HTML fetch data **after** the page has loaded.
+A tiny library used to let your HTML fetch and post data **after** the page has loaded.
 
-This can be used to fill the page with data as soon as the page loads or a request can be triggered via an event.
+This can be used to fill the page with data as soon as the page loads or a request can be triggered via an ajax event. Alternativley,
+data can be posted from a form via ajax. All with ZERO JavaScript.
 
 ## Documentation
 
