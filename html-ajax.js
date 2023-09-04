@@ -111,7 +111,7 @@ function ajax_init() {
         // Otherwise just write the exact response
         if(parser) {
             // If the user requested JSON data, then pass the response to the parser function as parsed JSON
-            response = options.json ? execute_parser(parser, JSON.parse(response)) : execute_parser(parser, response)        
+            response = options?.json ? execute_parser(parser, JSON.parse(response)) : execute_parser(parser, response)        
         }
         element.innerHTML = response
     }
