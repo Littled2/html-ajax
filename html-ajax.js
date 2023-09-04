@@ -111,7 +111,7 @@ function ajax_init() {
         // Otherwise just write the exact response
         if(parser) {
             // If the user requested JSON data, then pass the response to the parser function as parsed JSON
-            response = options?.json ? execute_parser(parser, JSON.parse(response)) : execute_parser(parser, response)        
+            response = options?.json ? execute_parser(parser, JSON.parse(response), url) : execute_parser(parser, response, url)        
         }
         element.innerHTML = response
     }
@@ -180,12 +180,12 @@ function ajax_init() {
     
     
     
-    function execute_parser(parser, data) {
+    function execute_parser(parser, data, url) {
         try {
             return parser(data)
         } catch (error) {
             report_error(`error parsing data from ${url}`, error)
-            return 'An error occured'
+            return 'An error occurred'
         }
     }
     
@@ -193,7 +193,7 @@ function ajax_init() {
     
     function report_error(message, error) {
         if(error) console.error(error)
-        console.error(`${error ? 'INFO ABOUT THE ABOVE ERROR \n' : ''} ajax-get error: ${message}`)
+        console.error(`${error ? 'html-ajax: INFO ABOUT THE ABOVE ERROR \n' : ''} ajax-get error: ${message}`)
     }
 
 
