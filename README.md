@@ -7,9 +7,10 @@ data can be posted from a form via ajax. All with ZERO JavaScript.
 
 ## Documentation
 
+<br>
+
 ### For Getting Data
 
-<br>
 
 
 |  Attribute Name  |  Purpose  |
@@ -17,14 +18,15 @@ data can be posted from a form via ajax. All with ZERO JavaScript.
 | ajax-get         | Used to tell the library where to fetch the data from |
 | ajax-parser      | Used to specify a function that the data should be passed to |
 | ajax-listener    | Specifies the name of the html-ajax event that will make this element repeat its request |
-| ajax-update      | Specifies the name of the html-ajax event to dispatch when the triggered (default trigger event is the click event unless the element is a form: in which case the default event is teh submit event) |
+| ajax-event      | Specifies the name of the html-ajax event to dispatch when the triggered (default trigger event is the click event unless the element is a form: in which case the default event is teh submit event) |
 | ajax-trigger     | Used to specify the event that should trigger the ajax event |
 | ajax-defer        | Tells the library not to fetch the data on page load |
 | ajax-options      | Used to pass any other options about this ajax request eg. Parse as JSON (json: true) |
 
-### For Posting Data
 
 <br>
+
+### For Posting Data
 
 |  Attribute Name  |  Purpose  |
 |------------------|-----------|
@@ -34,9 +36,60 @@ data can be posted from a form via ajax. All with ZERO JavaScript.
 
 <br>
 
+## Ajax Events System
+Want to trigger ajax-get or ajax-post requests, other than on page load or form submissions? The library ships with an inbuilt events system for handling this.
+
+Using the *ajax-event*, *ajax-trigger* and *ajax-listener* attributes this is possible.
+
+### ajax-event = "event-name"
+This specifies the name of the ajax event to trigger. The default trigger for the event to be fired off is if this element is clicked (Unless the element is a ```<form>``` in which case the default event is fired after the form submission has finished).
+
+When the event is triggered, any elements using *ajax-listener* will repeat their ajax-get or ajax-post requests.
+
+
+### ajax-trigger = "js-event"
+
+This attribute is used on the element that triggers the ajax event. any standard js event type is valid. The ajax-event will be triggered when the specified event is fired for the element.
+
+The list of all event types: https://developer.mozilla.org/en-US/docs/Web/Events#event_listing
+
+
+#### For Example
+If you wanted to fire the *ajax-event* called 'get-customer-data' when a an input's value changes:
+```html
+
+<input ajax-event="get-customer-data" ajax-trigger="input" >
+
+```
+
+### ajax-listener
+
+Use this in an element who's ajax-get or ajax-post event you would like to be repeated whenever this event is fired.
+
+#### Eg. refreshing customer data
+
+```html
+
+<div
+    ajax-get="/customer-details"
+    ajax-listener="get-customer-data"
+    ajax-parser="parse_customer_data"
+    ajax-options="json:true"
+>
+    
+
+</div>
+
+
+<button ajax-event="ajax-event-name">
+
+```
+
+<br>
+
 ## Examples
 
-### GET Requests
+### 1. GET Requests
 
 <hr>
 
@@ -103,17 +156,17 @@ function parser_function(response_data) {
 </div>
 
 <button
-    ajax-update = "listenerName"
+    ajax-event = "listenerName"
     ajax-trigger = "mouseover"
 >
 Refresh
 </button>
 ```
-*When the cursor hovers over the button, every element with ajax-listener set to the same string as ajax-update will repeat its AJAX request, refreshing its content.*
+*When the cursor hovers over the button, every element with ajax-listener set to the same string as ajax-event will repeat its AJAX request, refreshing its content.*
 
 <br>
 
-### POST Requests
+### 2. POST Requests
 
 <hr>
 
