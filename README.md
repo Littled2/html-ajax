@@ -1,38 +1,33 @@
-﻿# AJAX in HTML
+﻿# HTML-AJAX
 
-A tiny library used to let your HTML fetch and post data **after** the page has loaded.
+*Make AJAX requests, directly from your HTML*
 
-This can be used to fill the page with data as soon as the page loads or a request can be triggered via an ajax event. Alternativley,
-data can be posted from a form via ajax. All with ZERO JavaScript.
+The most simple use case:
+```html
+<div
+    ajax-get="/url"
+></div>
+```
+*Fetches the data from /url and writes it to the innerHTML of the div
 
-## Documentation
+## AJAX-Properties
+All features of the HTML-AJAX library are implemented using optional HTML attributes
 
-<br>
-
-### For Getting Data
-
-
-
-|  Attribute Name  |  Purpose  |
-|------------------|-----------|
-| ajax-get         | Used to tell the library where to fetch the data from |
-| ajax-parser      | Used to specify a function that the data should be passed to |
-| ajax-listener    | Specifies the name of the html-ajax event that will make this element repeat its request |
-| ajax-event      | Specifies the name of the html-ajax event to dispatch when the triggered (default trigger event is the click event unless the element is a form: in which case the default event is teh submit event) |
-| ajax-trigger     | Used to specify the event that should trigger the ajax event |
-| ajax-defer        | Tells the library not to fetch the data on page load |
-| ajax-options      | Used to pass any other options about this ajax request eg. Parse as JSON (json: true) |
-
-
-<br>
-
-### For Posting Data
-
-|  Attribute Name  |  Purpose  |
-|------------------|-----------|
-| ajax-post        | Specifies the endpoint to post the data too |
-| ajax-data        | Specifies the key of this data in the post request. The data value is the value attribute of the element where ajax-data is stated |
-| ajax-options      | Used to pass any other options about this ajax request eg. Don't overwrite form with the server's response (overwrite: false) |
+| Attribute Name | Attribute Value | Description |
+| -------------- | --------------- | ----------- |
+| ajax-get       | URL | Tells HTML-AJAX where to request data from |
+| ajax-parser    | function_name | Optionally reference the name of a JavaScript function to parse what the request fetches |
+| ajax-parse-json| n/a | Optionally parse the data as JSON |
+| ajax-provide   | identifier | Provide the data returned from the request to elements that use "ajax-use" |
+| ajax-use       | identifier | Allows an element to use data that has been provided elsewhere by an element using "ajax-provide". |
+| ajax-no-write  | n/a | Prevents the default behavior where the data is written to the element. |
+| ajax-write-as-text | n/a | Writes the data to the element's innerText rather than innerHTML. Useful to prevent XSS attack vector. |
+| ajax-write-to  | HTML attribute name | Writes the data to a particular HTML attribute, rather than innerHTML or innerText. |
+| ajax-listener  | Event name | Specifies the name of the custom event that will make this element repeat its request |
+| ajax-event     | Event name |  Specifies the name of the custom event to dispatch when the triggered (default trigger event is the click event unless the element is a form: in which case the default event is teh submit event) |
+| ajax-trigger   | JavaScript event name | 
+| ajax-defer     | n/a | Tells the library to not make ajax-get request on page load |
+| ajax-post      | URL | Exclusively for <form> tags. Tells HTML-AJAX where to post the form's data to |
 
 <br>
 
@@ -74,11 +69,8 @@ Use this in an element who's ajax-get or ajax-post event you would like to be re
     ajax-get="/customer-details"
     ajax-listener="get-customer-data"
     ajax-parser="parse_customer_data"
-    ajax-options="json:true"
->
-    
-
-</div>
+    ajax-parse-json
+></div>
 
 
 <button ajax-event="ajax-event-name">
@@ -110,9 +102,8 @@ Use this in an element who's ajax-get or ajax-post event you would like to be re
 <div
     ajax-get = "https://domain.com/my-resource"
     ajax-parser = "parser_function"
-    ajax-options = "json:true"
->
-</div>
+    ajax-parse-json
+></div>
 ```
 
 *The data fetched from ajax-get will be passed to the function specified by ajax-parser, what this function returns will be written to the element as HTML*
@@ -122,7 +113,7 @@ Use this in an element who's ajax-get or ajax-post event you would like to be re
 function parser_function(response_data) {
     let html = ''
     for (let i = 0; i < response_data.length; i++) {
-        html += `<p><b>${response_data[i].name}</b>  ${response_data[i].name}</p>`
+        html += `<p><b>${response_data[i].name}</b> - ${response_data[i].age}</p>`
     }
     return html  // This is what will be written as html to the element
 }
@@ -138,8 +129,7 @@ function parser_function(response_data) {
 <div
     ajax-get = "https://domain.com/my-resource"
     ajax-parser = "function_name"
-
-    ajax-options = "json:true"
+    ajax-parse-json
 >
 </div>
 ```
@@ -176,15 +166,8 @@ Refresh
 **Handling a form submission**
 ```html
 <form ajax-post = "/your-endpoint">
-    <input placeholder = "Full Name" ajax-data = "fullName">
+    <input type = "text" placeholder = "Full Name" name = "fullName">
     <input type = "submit">
 </form>
 ```
-*When the form submit event is fired, the data in the form will be encapsulated automatically in a form data object and then posted to the endpoint. By default, the response from the server will overwrite innerHTML of the form.*
-
-*The form data in this case will take the form:*
-```js
-{
-    fullName: "The value entered"
-}
-```
+*When the form submit event is fired, the data in the form will be encapsulated automatically in a form data object and then posted to the endpoint.*

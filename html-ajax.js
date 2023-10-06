@@ -100,14 +100,19 @@ class ajax_control {
      */
     async server_request(element) {
 
-        let raw_data
+        let raw_data, error
 
         if(element.hasAttribute("ajax-get")) {
-            raw_data = await this.get(element.getAttribute("ajax-get"))
+            [ error, raw_data ] = await this.get(element.getAttribute("ajax-get"))
         } else if(element.hasAttribute("ajax-post")) {
-            raw_data = await this.post(element.getAttribute("ajax-post"))
+            [ error, raw_data ]  = await this.post(element.getAttribute("ajax-post"), new FormData(element))
         } else {
             console.error(element, "Has neither an ajax-get or ajax-post attribute")
+        }
+        
+        // Check for error and an error handler
+        if(error && element.hasAttribute("ajax-on-request-error")) {
+            raw_data = this.run_request_error_handler(element.getAttribute("ajax-on-request-error"), raw_data)
         }
 
         return raw_data
@@ -117,10 +122,10 @@ class ajax_control {
         try {
             let res = await fetch(url)
             if(!res.ok) throw `Status Code: ${res.status}`
-            return await res.text()
+            return [ false, await res.text() ]
         } catch (error) {
             console.error(`Something went wrong during ajax-get from: ${url}`, error)
-            return null
+            return [ true, error ]
         }
     }
 
@@ -131,14 +136,27 @@ class ajax_control {
                 method: "POST",
                 body: data
             })
-            if(!res.ok) throw `Status Code: ${res.status}`
-            return await res.text()
+            if(!res.ok) throw res
+            return [ false, await res.text() ]
         } catch (error) {
-            console.error(`Something went wrong during ajax-get from: ${url}`, error)
+            console.error(`Something went wrong during ajax-post to: ${url}    Status code: ${error.status}, ${error.statusText}`)
+            return [ true, error ]
+        }
+    }
+
+    run_request_error_handler(handlerName, response, element) {
+        try {
+            return window[handlerName](response)
+        } catch (error) {
+            console.error("Error executing error handler function:", handlerName, ", ", error)
             return null
         }
     }
 
+    /**
+     * Capture the submit event of a form
+     * @param {Event} e The Form event
+     */
     capture_form_submit(e) {
         e.preventDefault()
         this.execute_element(e.target)
@@ -170,7 +188,7 @@ class ajax_control {
             try {
                 data = window[element.getAttribute("ajax-parser")](data)
             } catch (error) {
-                console.error("Error executing parser function", error)
+                console.error("Error executing parser function:", element.getAttribute("ajax-parser"), ", ", error)
                 return null
             }
         }
@@ -189,39 +207,34 @@ class ajax_control {
         return section
     } 
 
-    post_data(element) {
-
-        let raw_data
-
-        if(element.hasAttribute("ajax-get")) {
-            raw_data = this.get(element.getAttribute("ajax-get"))
-        } else if(element.hasAttribute("ajax-post")) [
-            raw_data = this.post(element.getAttribute("ajax-post"), this.get_post_data(element))
-        ]
-    }
-
-    /**
-     * Returns the data to be posted
-     * @param {HTMLElement} element The Element that is making the POST request
-     */
-    get_post_data(formElement) {
-        return new FormData(formElement)
-    }
-
 
     /**
      * Writes data to the element
      * @param {HTMLElement} element The element being written to
-     * @param {String} html The HTML string to be written
+     * @param {String} data The data string to be written to the element
      */
-    write_data_to_element(html, element) {
+    write_data_to_element(data, element) {
 
         if(element.hasAttribute("ajax-no-write")) return
 
+        if(element.hasAttribute("ajax-write-to")) {
+            this.write_data_to_attribute(element.getAttribute("ajax-write-to"), data, element)
+            return
+        }
+
         if(!element.hasAttribute("ajax-write-as-text")) {
-            element.innerHTML = html
+            element.innerHTML = data
         } else {
-            element.innerText = html
+            element.innerText = data
+        }
+    }
+
+
+    write_data_to_attribute(attribute, data, element) {
+        if(attribute === "value") {
+            element.value = data
+        } else {
+            element.setAttribute(element.getAttribute("ajax-write-to"), data)
         }
     }
 
